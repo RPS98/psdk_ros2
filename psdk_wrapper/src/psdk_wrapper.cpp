@@ -432,6 +432,8 @@ PSDKWrapper::load_parameters()
     params_.imu_frame = std::string(get_namespace()) + "/" + params_.imu_frame;
     params_.body_frame = std::string(get_namespace()) + "/" + params_.body_frame;
     params_.map_frame = std::string(get_namespace()) + "/" + params_.map_frame;
+    params_.gimbal_base_frame =
+      std::string(get_namespace()) + "/" + params_.gimbal_base_frame;
     params_.gimbal_frame = std::string(get_namespace()) + "/" + params_.gimbal_frame;
     params_.camera_frame = std::string(get_namespace()) + "/" + params_.camera_frame;
   }
@@ -1432,7 +1434,8 @@ PSDKWrapper::publish_static_transforms()
       geometry_msgs::msg::TransformStamped tf_H20_zoom;
       tf_H20_zoom.header.stamp = this->get_clock()->now();
       tf_H20_zoom.header.frame_id = params_.camera_frame;
-      tf_H20_zoom.child_frame_id = "h20_zoom_optical_link";
+      tf_H20_zoom.child_frame_id =
+        std::string(get_namespace()) + "/h20_zoom_optical_link";
       tf_H20_zoom.transform.translation.x = psdk_utils::T_H20_ZOOM[0];
       tf_H20_zoom.transform.translation.y = psdk_utils::T_H20_ZOOM[1];
       tf_H20_zoom.transform.translation.z = psdk_utils::T_H20_ZOOM[2];
@@ -1445,7 +1448,8 @@ PSDKWrapper::publish_static_transforms()
       geometry_msgs::msg::TransformStamped tf_H20_wide;
       tf_H20_wide.header.stamp = this->get_clock()->now();
       tf_H20_wide.header.frame_id = params_.camera_frame;
-      tf_H20_wide.child_frame_id = "h20_wide_optical_link";
+      tf_H20_wide.child_frame_id =
+        std::string(get_namespace()) + "/h20_wide_optical_link";
       tf_H20_wide.transform.translation.x = psdk_utils::T_H20_WIDE[0];
       tf_H20_wide.transform.translation.y = psdk_utils::T_H20_WIDE[1];
       tf_H20_wide.transform.translation.z = psdk_utils::T_H20_WIDE[2];
