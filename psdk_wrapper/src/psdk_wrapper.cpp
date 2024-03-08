@@ -418,7 +418,14 @@ PSDKWrapper::load_parameters()
                 "gimbal_frame param not defined, using default one: %s",
                 params_.gimbal_frame.c_str());
   }
-  params_.gimbal_frame = add_tf_prefix(params_.gimbal_frame);
+  params_.gimbal_base_frame = add_tf_prefix(params_.gimbal_base_frame);
+  if (!get_parameter("gimbal_base_frame", params_.gimbal_base_frame))
+  {
+    RCLCPP_WARN(get_logger(),
+                "gimbal_base_frame param not defined, using default one: %s",
+                params_.gimbal_base_frame.c_str());
+  }
+  params_.gimbal_base_frame = add_tf_prefix(params_.gimbal_base_frame);
   if (!get_parameter("camera_frame", params_.camera_frame))
   {
     RCLCPP_WARN(get_logger(),
@@ -1520,7 +1527,9 @@ PSDKWrapper::initialize_psdk_modules()
 std::string
 PSDKWrapper::add_tf_prefix(const std::string &frame_name)
 {
-  return params_.tf_frame_prefix + frame_name;
+  std::string frame = params_.tf_frame_prefix + frame_name;
+  RCLCPP_INFO(get_logger(), "Adding TF prefix to frame: %s", frame.c_str());
+  return frame;
 }
 
 }  // namespace psdk_ros2
