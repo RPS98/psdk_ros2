@@ -43,6 +43,7 @@ PSDKWrapper::PSDKWrapper(const std::string &node_name)
   declare_parameter("mandatory_modules.camera", rclcpp::ParameterValue(true));
   declare_parameter("mandatory_modules.gimbal", rclcpp::ParameterValue(true));
   declare_parameter("mandatory_modules.liveview", rclcpp::ParameterValue(true));
+  declare_parameter("tf_frame_prefix", rclcpp::ParameterValue(""));
   declare_parameter("imu_frame", rclcpp::ParameterValue("psdk_imu_link"));
   declare_parameter("body_frame", rclcpp::ParameterValue("psdk_base_link"));
   declare_parameter("map_frame", rclcpp::ParameterValue("psdk_map_enu"));
@@ -51,7 +52,6 @@ PSDKWrapper::PSDKWrapper(const std::string &node_name)
   declare_parameter("gimbal_frame", rclcpp::ParameterValue("psdk_gimbal_link"));
   declare_parameter("camera_frame", rclcpp::ParameterValue("psdk_camera_link"));
   declare_parameter("publish_transforms", rclcpp::ParameterValue(true));
-  declare_parameter("add_namespace_to_tf", rclcpp::ParameterValue(false));
   declare_parameter("hms_return_codes_path", rclcpp::ParameterValue(""));
 
   declare_parameter("data_frequency.imu", 1);
@@ -385,58 +385,47 @@ PSDKWrapper::load_parameters()
   get_parameter("mandatory_modules.liveview", is_liveview_module_mandatory_);
   get_parameter("mandatory_modules.hms", is_hms_module_mandatory_);
 
+  if (!get_parameter("tf_frame_prefix", params_.tf_frame_prefix))
+  {
+    RCLCPP_WARN(get_logger(),
+                "tf_frame_prefix param not defined, using default one: %s",
+                params_.tf_frame_prefix.c_str());
+  }
   if (!get_parameter("imu_frame", params_.imu_frame))
   {
     RCLCPP_WARN(get_logger(),
                 "imu_frame param not defined, using default one: %s",
                 params_.imu_frame.c_str());
   }
+  params_.imu_frame = add_tf_prefix(params_.imu_frame);
   if (!get_parameter("body_frame", params_.body_frame))
   {
     RCLCPP_WARN(get_logger(),
                 "body_frame param not defined, using default one: %s",
                 params_.body_frame.c_str());
   }
+  params_.body_frame = add_tf_prefix(params_.body_frame);
   if (!get_parameter("map_frame", params_.map_frame))
   {
     RCLCPP_WARN(get_logger(),
                 "map_frame param not defined, using default one: %s",
                 params_.map_frame.c_str());
   }
-  if (!get_parameter("gimbal_base_frame", params_.gimbal_base_frame))
-  {
-    RCLCPP_WARN(get_logger(),
-                "gimbal_base_frame param not defined, using default one: %s",
-                params_.gimbal_base_frame.c_str());
-  }
+  params_.map_frame = add_tf_prefix(params_.map_frame);
   if (!get_parameter("gimbal_frame", params_.gimbal_frame))
   {
     RCLCPP_WARN(get_logger(),
                 "gimbal_frame param not defined, using default one: %s",
                 params_.gimbal_frame.c_str());
   }
+  params_.gimbal_frame = add_tf_prefix(params_.gimbal_frame);
   if (!get_parameter("camera_frame", params_.camera_frame))
   {
     RCLCPP_WARN(get_logger(),
                 "camera_frame param not defined, using default one: %s",
                 params_.camera_frame.c_str());
   }
-  if (!get_parameter("add_namespace_to_tf", params_.add_namespace_to_tf))
-  {
-    RCLCPP_WARN(get_logger(),
-                "add_namespace_to_tf param not defined, using default one: %s",
-                params_.add_namespace_to_tf ? "true" : "false");
-  }
-  if (params_.add_namespace_to_tf)
-  {
-    params_.imu_frame = std::string(get_namespace()) + "/" + params_.imu_frame;
-    params_.body_frame = std::string(get_namespace()) + "/" + params_.body_frame;
-    params_.map_frame = std::string(get_namespace()) + "/" + params_.map_frame;
-    params_.gimbal_base_frame =
-      std::string(get_namespace()) + "/" + params_.gimbal_base_frame;
-    params_.gimbal_frame = std::string(get_namespace()) + "/" + params_.gimbal_frame;
-    params_.camera_frame = std::string(get_namespace()) + "/" + params_.camera_frame;
-  }
+  params_.camera_frame = add_tf_prefix(params_.camera_frame);
   if (!get_parameter("publish_transforms", params_.publish_transforms))
   {
     RCLCPP_WARN(get_logger(),
@@ -1434,8 +1423,7 @@ PSDKWrapper::publish_static_transforms()
       geometry_msgs::msg::TransformStamped tf_H20_zoom;
       tf_H20_zoom.header.stamp = this->get_clock()->now();
       tf_H20_zoom.header.frame_id = params_.camera_frame;
-      tf_H20_zoom.child_frame_id =
-        std::string(get_namespace()) + "/h20_zoom_optical_link";
+      tf_H20_zoom.child_frame_id = add_tf_prefix("h20_zoom_optical_link");
       tf_H20_zoom.transform.translation.x = psdk_utils::T_H20_ZOOM[0];
       tf_H20_zoom.transform.translation.y = psdk_utils::T_H20_ZOOM[1];
       tf_H20_zoom.transform.translation.z = psdk_utils::T_H20_ZOOM[2];
@@ -1448,8 +1436,7 @@ PSDKWrapper::publish_static_transforms()
       geometry_msgs::msg::TransformStamped tf_H20_wide;
       tf_H20_wide.header.stamp = this->get_clock()->now();
       tf_H20_wide.header.frame_id = params_.camera_frame;
-      tf_H20_wide.child_frame_id =
-        std::string(get_namespace()) + "/h20_wide_optical_link";
+      tf_H20_wide.child_frame_id = add_tf_prefix("h20_wide_optical_link");
       tf_H20_wide.transform.translation.x = psdk_utils::T_H20_WIDE[0];
       tf_H20_wide.transform.translation.y = psdk_utils::T_H20_WIDE[1];
       tf_H20_wide.transform.translation.z = psdk_utils::T_H20_WIDE[2];
@@ -1528,6 +1515,12 @@ PSDKWrapper::initialize_psdk_modules()
   }
 
   return true;
+}
+
+std::string
+PSDKWrapper::add_tf_prefix(const std::string &frame_name)
+{
+  return params_.tf_frame_prefix + frame_name;
 }
 
 }  // namespace psdk_ros2
