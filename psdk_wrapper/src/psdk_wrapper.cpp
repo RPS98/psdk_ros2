@@ -418,7 +418,7 @@ PSDKWrapper::load_parameters()
                 "gimbal_frame param not defined, using default one: %s",
                 params_.gimbal_frame.c_str());
   }
-  params_.gimbal_base_frame = add_tf_prefix(params_.gimbal_base_frame);
+  params_.gimbal_base_frame = add_tf_prefix(params_.gimbal_frame);
   if (!get_parameter("gimbal_base_frame", params_.gimbal_base_frame))
   {
     RCLCPP_WARN(get_logger(),
