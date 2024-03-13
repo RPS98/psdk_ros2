@@ -74,7 +74,13 @@ PSDKWrapper::PSDKWrapper(const std::string &node_name)
 
   declare_parameter("num_of_initialization_retries", 1);
 }
-PSDKWrapper::~PSDKWrapper() {}
+PSDKWrapper::~PSDKWrapper() {
+  rclcpp_lifecycle::State state;
+  PSDKWrapper::on_deactivate(state);
+  PSDKWrapper::on_cleanup(state);
+  PSDKWrapper::on_shutdown(state);
+  RCLCPP_INFO(get_logger(), "PSDKWrapper Destroyed");
+}
 
 PSDKWrapper::CallbackReturn
 PSDKWrapper::on_configure(const rclcpp_lifecycle::State &state)
